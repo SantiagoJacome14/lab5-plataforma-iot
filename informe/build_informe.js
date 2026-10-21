@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const {
   Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
-  Table, TableRow, TableCell, WidthType, ShadingType, ImageRun,
+  Table, TableRow, TableCell, WidthType, ShadingType, ImageRun, PageBreak,
 } = require("docx");
 
 const diagram = fs.readFileSync(path.join(__dirname, "diagrama_lab5.png"));
@@ -32,6 +32,47 @@ function kvTable(rows, w1 = 2600, w2 = 6760) {
 
 const PX = 96;
 const dW = 6.5 * PX, dH = dW * (560 / 2000);
+
+
+const EV = path.join(__dirname, "..", "evidencias");
+const SIZES = JSON.parse(fs.readFileSync(path.join(__dirname, "_sizes.json"), "utf-8"));
+function fit(w, h, maxWIn, maxHIn) {
+  let width = maxWIn * PX, height = (h / w) * width;
+  if (height > maxHIn * PX) { height = maxHIn * PX; width = (w / h) * height; }
+  return { width: Math.round(width), height: Math.round(height) };
+}
+function figure(file, caption, maxH = 3.3) {
+  const [w, h] = SIZES[file];
+  return [
+    new Paragraph({ keepNext: true, alignment: AlignmentType.CENTER, spacing: { before: 120, after: 40 }, children: [new ImageRun({ data: fs.readFileSync(path.join(EV, file)), type: "png", transformation: fit(w, h, 6.4, maxH) })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 140 }, children: [new TextRun({ text: caption, italics: true, size: 17, color: "475569" })] }),
+  ];
+}
+function textBlock(title, file) {
+  const lines = fs.readFileSync(path.join(EV, file), "utf-8").replace(/\r/g, "").split("\n");
+  return [
+    new Paragraph({ keepNext: true, spacing: { before: 120, after: 40 }, children: [new TextRun({ text: title, bold: true, size: 18 })] }),
+    ...lines.map((l) => new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: l.length ? l : " ", font: "Consolas", size: 14 })] })),
+  ];
+}
+function anexo() {
+  return [
+    new Paragraph({ children: [new PageBreak()] }),
+    h1("Anexo — Evidencias"),
+    p("Capturas y archivos generados durante la toma real (17 al 21 de octubre de 2026, VM de Azure). Los mismos archivos están en la carpeta evidencias/ del repositorio."),
+    ...figure("01_compose_ps.png", "Evidencia 01. docker compose ps: los 6 servicios arriba; influxdb en estado healthy."),
+    ...figure("02_mosquitto_sub.png", "Evidencia 02. Mensajes MQTT reales en el broker, topic lab5/vm-pub-01/telemetry (temperature, humidity, illuminance y ts en ms)."),
+    ...figure("03_consulta_influx.png", "Evidencia 03. Consulta Flux a InfluxDB: último valor de cada variable, con device_id y la hora del publicador."),
+    ...figure("04_dashboard_4dias_arriba.png", "Evidencia 04. Dashboard con rango \"Last 4 days\" (parte superior): valores actuales, estado de la alerta y series de temperatura y humedad.", 3.6),
+    ...figure("04b_dashboard_4dias_abajo.png", "Evidencia 04b. Dashboard (parte inferior): iluminancia y mensajes por hora, estables en ~360, sin huecos.", 3.6),
+    ...figure("05a_regla_normal.png", "Evidencia 05a. Regla \"Temperatura alta\" provisionada, en estado Normal."),
+    ...figure("05b_alerta_pending.png", "Evidencia 05b. Tras forzar 45 °C: la regla pasa a Pending."),
+    ...figure("05_alerta_firing.png", "Evidencia 05. La regla pasa a Firing."),
+    ...figure("06b_alert_sink_firing_resolved.png", "Evidencia 06. Log del webhook: FIRING (02:11:50 UTC, valor 45) y RESOLVED (02:15:50 UTC, valor 23,38)."),
+    ...textBlock("Evidencia inicio_toma.txt", "inicio_toma.txt"),
+    ...textBlock("Evidencia 07_resumen_ventana.txt (salida de scripts/resumen_ventana.sh)", "07_resumen_ventana.txt"),
+  ];
+}
 
 const doc = new Document({
   sections: [{
@@ -88,7 +129,8 @@ const doc = new Document({
       bullet("Plan B preparado y no necesario: scripts de PowerShell para Docker Desktop en Windows (el disco tenía solo 7,6 GB libres)."),
 
       h1("7. Entregables"),
-      p("Repositorio en GitHub (https://github.com/SantiagoJacome14/lab5-plataforma-iot): docker-compose.yml, publisher/, telegraf/, grafana/ (datasource, dashboard y alerta provisionados), README (cómo levantar el stack en una VM Linux o con Docker Desktop, sin secretos; .env.example), scripts/ (resumen_ventana.sh para Linux; iniciar, forzar_alerta y resumen_ventana en PowerShell para Windows) y /evidencias (01 compose ps, 02 mosquitto_sub, 03 consulta a InfluxDB, 04 dashboard, 05 alerta Pending/Firing, 06 log del webhook, 07 resumen de la ventana e inicio_toma.txt). La clave SSH y el .env no se entregan."),
+      p("Repositorio en GitHub (https://github.com/SantiagoJacome14/lab5-plataforma-iot): docker-compose.yml, publisher/, telegraf/, grafana/ (datasource, dashboard y alerta provisionados), README (cómo levantar el stack en una VM Linux o con Docker Desktop, sin secretos; .env.example), scripts/ (resumen_ventana.sh para Linux; iniciar, forzar_alerta y resumen_ventana en PowerShell para Windows) y /evidencias (01 compose ps, 02 mosquitto_sub, 03 consulta a InfluxDB, 04 dashboard, 05 alerta Pending/Firing, 06 log del webhook, 07 resumen de la ventana e inicio_toma.txt). Las evidencias se adjuntan al final como Anexo. La clave SSH y el .env no se entregan."),
+      ...anexo(),
     ],
   }],
 });
