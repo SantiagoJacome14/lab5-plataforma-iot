@@ -1,0 +1,96 @@
+name: lab5-plataforma
+
+# Pipeline: publisher --MQTT--> mosquitto --> telegraf --> influxdb <-- grafana --webhook--> alert-sink
+# Todo lo sensible viene de .env (no se versiona). Copia .env.example a .env antes de levantar.
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1883:1883"   # solo local; cambia a "1883:1883" si otros equipos deben publicar
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+
+  influxdb:
+    image: influxdb:2.7
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUX_USER:?defina INFLUX_USER en .env}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASSWORD:?defina INFLUX_PASSWORD en .env}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUX_ORG:?defina INFLUX_ORG en .env}
+      DOCKER_INFLUXDB_INIT_BUCKET: lab5
+      DOCKER_INFLUXDB_INIT_RETENTION: "0"   # 0 = retencion infinita
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN:?defina INFLUX_TOKEN en .env}
+    volumes:
+      - influx-data:/var/lib/influxdb2
+      - influx-config:/etc/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  telegraf:
+    image: telegraf:1.32
+    restart: unless-stopped
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    environment:
+      INFLUX_TOKEN: ${INFLUX_TOKEN}
+      INFLUX_ORG: ${INFLUX_ORG}
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+
+  grafana:
+    image: grafana/grafana-oss:11.3.0
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+    ports:
+      - "${GRAFANA_BIND:-127.0.0.1}:3000:3000"   # 0.0.0.0 solo si Grafana debe verse desde otros equipos
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?defina GRAFANA_PASSWORD en .env}
+      GF_AUTH_ANONYMOUS_ENABLED: ${GRAFANA_ANONYMOUS:-false}
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/lab5-ambiental.json
+      # usadas por el provisioning (datasource y reglas de alerta)
+      INFLUX_TOKEN: ${INFLUX_TOKEN}
+      INFLUX_ORG: ${INFLUX_ORG}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+  publisher:
+    build: ./publisher
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      DEVICE_ID: ${DEVICE_ID:-vm-pub-01}
+      PUBLISH_INTERVAL: ${PUBLISH_INTERVAL:-10}
+
+  alert-sink:
+    image: python:3.12-alpine
+    restart: unless-stopped
+    command: ["python", "-u", "/app/sink.py"]
+    volumes:
+      - ./alert-sink:/app:ro
+
+volumes:
+  mosquitto-data:
+  influx-data:
+  influx-config:
+  grafana-data:

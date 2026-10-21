@@ -1,0 +1,7 @@
+alert-sink-1  | alert-sink escuchando en :8080
+alert-sink-1  | 
+alert-sink-1  | === [2026-10-18 02:11:50] webhook de Grafana: status=firing receiver=webhook-lab5
+alert-sink-1  |   - FIRING    Temperatura alta (max 2 min > 35 C) | severity=warning | values={'B': 45, 'C': 1} | desde=2026-10-18T02:11:40Z
+alert-sink-1  | 
+alert-sink-1  | === [2026-10-18 02:15:50] webhook de Grafana: status=resolved receiver=webhook-lab5
+alert-sink-1  |   - RESOLVED  Temperatura alta (max 2 min > 35 C) | severity=warning | values={'B': 23.38, 'C': 0} | desde=2026-10-18T02:15:10Z

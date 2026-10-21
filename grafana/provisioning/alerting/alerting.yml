@@ -1,0 +1,83 @@
+apiVersion: 1
+
+# Accion de la alerta: webhook hacia el contenedor "alert-sink" (queda en su log).
+contactPoints:
+  - orgId: 1
+    name: webhook-lab5
+    receivers:
+      - uid: webhook-lab5
+        type: webhook
+        settings:
+          url: http://alert-sink:8080/alerts
+          httpMethod: POST
+
+policies:
+  - orgId: 1
+    receiver: webhook-lab5
+    group_by: ["alertname"]
+    group_wait: 10s
+    group_interval: 1m
+    repeat_interval: 1h
+
+groups:
+  - orgId: 1
+    name: lab5-umbrales
+    folder: Lab 5
+    interval: 30s
+    rules:
+      - uid: lab5-temperatura-alta
+        title: Temperatura alta (max 2 min > 35 C)
+        condition: C
+        for: 30s
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        annotations:
+          summary: "La temperatura maxima de los ultimos 2 minutos supero 35 C"
+          description: "Umbral del escenario: 16-32 C. Valor forzado desde el publicador para la prueba."
+        labels:
+          severity: warning
+          variable: temperature
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: influxdb-lab5
+            model:
+              refId: A
+              datasource:
+                type: influxdb
+                uid: influxdb-lab5
+              intervalMs: 1000
+              maxDataPoints: 43200
+              query: |
+                from(bucket: "lab5")
+                  |> range(start: -2m)
+                  |> filter(fn: (r) => r._measurement == "ambiental" and r._field == "temperature")
+                  |> max()
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [35]

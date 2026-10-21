@@ -1,0 +1,34 @@
+Ventana analizada: 2026-10-17T21:17:11Z -> 2026-10-21T21:27:11Z (desde inicio_toma.txt: 2026-10-17 21:22:11 UTC, 4 dias)
+
+== Primer punto (inicio de la toma) ==
+#group,false,false,false,false
+#datatype,string,long,dateTime:RFC3339,double
+#default,_result,,,
+,result,table,_time,_value
+,,0,2026-10-17T21:20:35.712Z,28.68
+
+
+== Ultimo punto ==
+#group,false,false,false,false
+#datatype,string,long,dateTime:RFC3339,double
+#default,_result,,,
+,result,table,_time,_value
+,,0,2026-10-21T21:27:05.712Z,29.51
+
+
+== Total de puntos de temperature (esperado ~360 por hora a 10 s) ==
+#group,false,false,false
+#datatype,string,long,long
+#default,_result,,
+,result,table,_value
+,,0,34600
+
+
+== Horas con menos de 300 mensajes (la primera y la ultima hora son parciales y es normal que salgan) ==
+#group,false,false,false,false
+#datatype,string,long,dateTime:RFC3339,long
+#default,_result,,,
+,result,table,_time,_value
+,,0,2026-10-17T22:00:00Z,237
+,,0,2026-10-21T21:27:11Z,163
+
