@@ -32,8 +32,9 @@ sudo systemctl enable docker        # para que la toma sobreviva a un reinicio d
 
 ### Alternativa: Docker Desktop en Windows 11 (WSL2)
 
-Mismos archivos y mismo `docker-compose.yml`. Es la ruta usada en este proyecto porque la VM del curso no respondió y no hubo
-suscripción de Azure. Scripts de PowerShell en `scripts\`:
+Mismos archivos y mismo `docker-compose.yml`. Es el **plan B** que se preparó cuando la VM del curso no respondió y aún no había
+suscripción de Azure; al final **no hizo falta**: la toma real corrió en una VM de Azure (Debian 12, B2as_v2) con los comandos
+de las secciones "Sesión 1" y "Sesión 2". Scripts de PowerShell en `scripts\`:
 
 | Script | Qué hace |
 |---|---|
@@ -144,8 +145,9 @@ adjuntan al entregar. Esperado: 34.560 puntos por variable; una hora con menos d
 
 ### Evidencias (`/evidencias`)
 
-Estado: **ninguna existe todavía** (nada se ha ejecutado de punta a punta); se marcan al capturarlas. Los `.txt` los
-generan los scripts; los `.png` son capturas de pantalla con la hora visible.
+Estado: **todas capturadas** durante la toma real (17 al 21 de octubre de 2026, VM de Azure). Los `.txt` los generan los
+scripts o la consola de la VM; los `.png` son capturas de pantalla con la hora visible. Del dashboard hay dos capturas del rango
+de 4 días (`04_dashboard_4dias_arriba.png` y `04b_dashboard_4dias_abajo.png`) y tres de la alerta (`05a`, `05b` y `05`).
 
 | Archivo | Qué muestra | Cuándo | Origen |
 |---|---|---|---|
