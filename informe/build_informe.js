@@ -40,6 +40,7 @@ const doc = new Document({
       new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 }, children: [new TextRun({ text: "LABORATORIO 5: VISUALIZACIÓN + REGLAS / ALERTAS", bold: true, size: 30 })] }),
       new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [new TextRun({ text: "MQTT, InfluxDB y Grafana en una VM", italics: true, size: 22, color: "475569" })] }),
       new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 140 }, children: [new TextRun({ text: "Dawer Stiven Patiño · Julian Mejia · Santiago Jacome", size: 19 })] }),
+      new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 140 }, children: [new TextRun({ text: "Repositorio: https://github.com/SantiagoJacome14/lab5-plataforma-iot", size: 19, color: "1D4ED8" })] }),
 
       h1("1. Arquitectura"),
       p("Un publicador Python envía temperature, humidity e illuminance por MQTT (QoS 1) a Mosquitto; Telegraf, suscrito al topic lab5/+/telemetry, escribe cada mensaje en InfluxDB con la marca de tiempo del publicador. Grafana OSS está instalado aparte y solo consulta la TSDB (Flux); la regla de alerta notifica por webhook a un receptor cuyo log sirve de evidencia. Todo corre con Docker Compose en una VM de Azure (Debian 12, tamaño B2as_v2: 2 vCPU y 8 GiB, región North Central US, suscripción Azure for Students)."),
@@ -87,7 +88,7 @@ const doc = new Document({
       bullet("Plan B preparado y no necesario: scripts de PowerShell para Docker Desktop en Windows (el disco tenía solo 7,6 GB libres)."),
 
       h1("7. Entregables"),
-      p("Repositorio: docker-compose.yml, publisher/, telegraf/, grafana/ (datasource, dashboard y alerta provisionados), README (cómo levantar el stack en una VM Linux o con Docker Desktop, sin secretos; .env.example), scripts/ (resumen_ventana.sh para Linux; iniciar, forzar_alerta y resumen_ventana en PowerShell para Windows) y /evidencias (01 compose ps, 02 mosquitto_sub, 03 consulta a InfluxDB, 04 dashboard, 05 alerta Pending/Firing, 06 log del webhook, 07 resumen de la ventana e inicio_toma.txt). La clave SSH y el .env no se entregan."),
+      p("Repositorio en GitHub (https://github.com/SantiagoJacome14/lab5-plataforma-iot): docker-compose.yml, publisher/, telegraf/, grafana/ (datasource, dashboard y alerta provisionados), README (cómo levantar el stack en una VM Linux o con Docker Desktop, sin secretos; .env.example), scripts/ (resumen_ventana.sh para Linux; iniciar, forzar_alerta y resumen_ventana en PowerShell para Windows) y /evidencias (01 compose ps, 02 mosquitto_sub, 03 consulta a InfluxDB, 04 dashboard, 05 alerta Pending/Firing, 06 log del webhook, 07 resumen de la ventana e inicio_toma.txt). La clave SSH y el .env no se entregan."),
     ],
   }],
 });
